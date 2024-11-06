@@ -1,0 +1,45 @@
+ydlidar_node:
+  ros__parameters:
+    port: /dev/YDLIDAR
+    frame_id: laser_link
+    ignore_array: ""
+    baudrate: 128000
+    samp_rate: 9
+    resolution_fixed: true
+    singleChannel: false
+    auto_reconnect: true
+    reversion: true
+    isToFLidar: false
+    angle_max: 180.0
+    angle_min: -180.0
+    max_range: 10.0
+    min_range: 0.12
+    frequency: 10.0
+
+
+
+um7_driver:
+  ros__parameters:
+    port: "/dev/RSX-UM7"
+    frame_id: "imu_link"
+    mag_updates: true
+    quat_mode: true
+    zero_gyros: true
+    covariance: "0 0 0 0 0 0 0 0 0"
+
+imu_filter_node:
+  ros__parameters:
+    stateless: false
+    use_mag: false
+    publish_tf: false
+    reverse_tf: false
+    fixed_frame: "odom"
+    constant_dt: 0.0
+    publish_debug_topics: false
+    world_frame: "enu"
+    gain: 0.1
+    zeta: 0.0
+    mag_bias_x: 0.0
+    mag_bias_y: 0.0
+    mag_bias_z: 0.0
+    orientation_stddev: 0.0
