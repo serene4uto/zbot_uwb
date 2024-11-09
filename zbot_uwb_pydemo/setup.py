@@ -1,8 +1,6 @@
 from setuptools import find_packages, setup
-import os
-from glob import glob
 
-package_name = 'zbot_uwb_localization'
+package_name = 'zbot_uwb_pydemo'
 
 setup(
     name=package_name,
@@ -12,8 +10,6 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
-        (os.path.join('share', package_name), glob('launch/*.py')),
-        (os.path.join('share', package_name), glob('param/*.yaml')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -24,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'navuwb_transform_node = zbot_uwb_localization.navuwb_transform_node:main',
+            'uwb_follower = zbot_uwb_pydemo.uwb_follower:main',
+            'nav_to_pose = zbot_uwb_pydemo.nav_to_pose:main',
         ],
     },
 )

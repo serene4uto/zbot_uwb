@@ -65,7 +65,7 @@ class NavUwbTransformNode(Node):
     odom_topic = "/odometry/filtered"
     
     # Whether we get the transform's yaw from the odometry or IMU source
-    use_odometry_yaw_ = False
+    use_odometry_yaw_ = True
     
     # Whether or not we broadcast the Cartesian transform
     broadcast_cartesian_transform_ = True
@@ -269,115 +269,157 @@ class NavUwbTransformNode(Node):
         self.has_transform_uwb_ = True
         
         
+    # def get_robot_origin_cartesian_pose(self, uwb_cartesian_pose, transform_time):
+    #     """
+    #         Given the pose of the uwb sensor in the Cartesian frame, removes the
+    #         offset from the vehicle's centroid and returns the Cartesian-frame pose of said
+    #         centroid.
+    #     """
+    #     robot_cartesian_pose = Transform()
+        
+    #     robot_cartesian_pose.rotation.x = 0.0
+    #     robot_cartesian_pose.rotation.y = 0.0
+    #     robot_cartesian_pose.rotation.z = 0.0
+    #     robot_cartesian_pose.rotation.w = 1.0
+        
+    #     # Get linear offset from origin for UWB
+    #     try:
+    #         transform_offset = self.tf_buffer.lookup_transform(
+    #             self.base_link_frame_id_, self.uwb_frame_id_, transform_time, self.transform_timeout_)
+    #     except TransformException as e:
+    #         if self.uwb_frame_id_:
+    #             self.get_logger().error(
+    #                 f"Unable to obtain {self.base_link_frame_id_} -> {self.uwb_frame_id_} transform. "
+    #                 "Will assume navsat device is mounted at robot's origin")
+    #         robot_cartesian_pose = uwb_cartesian_pose
+    #         return robot_cartesian_pose
+
+    #     cartesian_orientation = self.transform_orientation_
+        
+    #     roll, pitch, yaw = R.from_quat([
+    #         cartesian_orientation.x,
+    #         cartesian_orientation.y,
+    #         cartesian_orientation.z,
+    #         cartesian_orientation.w
+    #     ]).as_euler('xyz', degrees=False)
+        
+    #     #TODO: check yaw if need offset : 
+    #     yaw += self.yaw_offset_
+    #     cartesian_rotation = R.from_euler('xyz', [roll, pitch, yaw], degrees=False)
+        
+    #     # Rotate the UWB linear offset by the orientation
+    #     origin = np.array([
+    #         transform_offset.transform.translation.x,
+    #         transform_offset.transform.translation.y,
+    #         transform_offset.transform.translation.z
+    #     ])
+    #     rotated_origin = cartesian_rotation.apply(origin) 
+        
+    #     # Set the robot's origin in the Cartesian frame
+    #     transform_offset.transform.translation.x = rotated_origin[0]
+    #     transform_offset.transform.translation.y = rotated_origin[1]
+    #     transform_offset.transform.translation.z = rotated_origin[2]
+        
+    #     # Zero out the rotation
+    #     transform_offset.transform.rotation.x = 0.0
+    #     transform_offset.transform.rotation.y = 0.0
+    #     transform_offset.transform.rotation.z = 0.0
+    #     transform_offset.transform.rotation.w = 1.0
+        
+    #     # Convert offset to homogeneous transformation matrix
+    #     transform_offset_matrix = np.eye(4)
+    #     transform_offset_matrix[0:3, 0:3] = R.from_quat([
+    #         transform_offset.transform.rotation.x,
+    #         transform_offset.transform.rotation.y,
+    #         transform_offset.transform.rotation.z,
+    #         transform_offset.transform.rotation.w
+    #     ]).as_matrix()
+        
+    #     transform_offset_matrix[0:3, 3] = np.array([
+    #         transform_offset.transform.translation.x,
+    #         transform_offset.transform.translation.y,
+    #         transform_offset.transform.translation.z
+    #     ])
+        
+    #     # Compute inverse of the offset matrix
+    #     transform_offset_matrix_inv = np.linalg.inv(transform_offset_matrix)
+        
+    #     # convert the UWB pose to a homogeneous transformation matrix
+    #     uwb_quat = [
+    #         uwb_cartesian_pose.rotation.x,
+    #         uwb_cartesian_pose.rotation.y,
+    #         uwb_cartesian_pose.rotation.z,
+    #         uwb_cartesian_pose.rotation.w
+    #     ]
+        
+    #     uwb_translation = [
+    #         uwb_cartesian_pose.translation.x,
+    #         uwb_cartesian_pose.translation.y,
+    #         uwb_cartesian_pose.translation.z
+    #     ]
+        
+    #     uwb_matrix = np.eye(4)
+    #     uwb_matrix[0:3, 0:3] = R.from_quat(uwb_quat).as_matrix()
+    #     uwb_matrix[0:3, 3] = uwb_translation
+        
+    #     # Apply the inverse offset to the UWB pose
+    #     robot_matrix = np.dot(transform_offset_matrix_inv, uwb_matrix)
+    #     robot_translation = robot_matrix[0:3, 3]
+    #     robot_quat = R.from_matrix(robot_matrix[0:3, 0:3]).as_quat()
+        
+    #     # Set the robot's origin in the Cartesian frame
+    #     robot_cartesian_pose.translation.x = robot_translation[0]
+    #     robot_cartesian_pose.translation.y = robot_translation[1]
+    #     robot_cartesian_pose.translation.z = robot_translation[2]
+    #     robot_cartesian_pose.rotation.x = robot_quat[0]
+    #     robot_cartesian_pose.rotation.y = robot_quat[1]
+    #     robot_cartesian_pose.rotation.z = robot_quat[2]
+    #     robot_cartesian_pose.rotation.w = robot_quat[3]
+        
+    #     return robot_cartesian_pose
+
     def get_robot_origin_cartesian_pose(self, uwb_cartesian_pose, transform_time):
         """
-            Given the pose of the uwb sensor in the Cartesian frame, removes the
-            offset from the vehicle's centroid and returns the Cartesian-frame pose of said
-            centroid.
-        """
-        robot_cartesian_pose = Transform()
-        
-        robot_cartesian_pose.rotation.x = 0.0
-        robot_cartesian_pose.rotation.y = 0.0
-        robot_cartesian_pose.rotation.z = 0.0
-        robot_cartesian_pose.rotation.w = 1.0
-        
-        # Get linear offset from origin for UWB
-        try:
-            transform_offset = self.tf_buffer.lookup_transform(
-                self.base_link_frame_id_, self.uwb_frame_id_, transform_time, self.transform_timeout_)
-        except TransformException as e:
-            if self.uwb_frame_id_:
-                self.get_logger().error(
-                    f"Unable to obtain {self.base_link_frame_id_} -> {self.uwb_frame_id_} transform. "
-                    "Will assume navsat device is mounted at robot's origin")
-            robot_cartesian_pose = uwb_cartesian_pose
-            return robot_cartesian_pose
+        Transforms the UWB tag position to the robot's base_link (origin) frame using tf2.
 
-        cartesian_orientation = self.transform_orientation_
-        
-        roll, pitch, yaw = R.from_quat([
-            cartesian_orientation.x,
-            cartesian_orientation.y,
-            cartesian_orientation.z,
-            cartesian_orientation.w
-        ]).as_euler('xyz', degrees=False)
-        
-        #TODO: check yaw if need offset : 
-        yaw += self.yaw_offset_
-        cartesian_rotation = R.from_euler('xyz', [roll, pitch, yaw], degrees=False)
-        
-        # Rotate the UWB linear offset by the orientation
-        origin = np.array([
-            transform_offset.transform.translation.x,
-            transform_offset.transform.translation.y,
-            transform_offset.transform.translation.z
-        ])
-        rotated_origin = cartesian_rotation.apply(origin) 
-        
-        # Set the robot's origin in the Cartesian frame
-        transform_offset.transform.translation.x = rotated_origin[0]
-        transform_offset.transform.translation.y = rotated_origin[1]
-        transform_offset.transform.translation.z = rotated_origin[2]
-        
-        # Zero out the rotation
-        transform_offset.transform.rotation.x = 0.0
-        transform_offset.transform.rotation.y = 0.0
-        transform_offset.transform.rotation.z = 0.0
-        transform_offset.transform.rotation.w = 1.0
-        
-        # Convert offset to homogeneous transformation matrix
-        transform_offset_matrix = np.eye(4)
-        transform_offset_matrix[0:3, 0:3] = R.from_quat([
-            transform_offset.transform.rotation.x,
-            transform_offset.transform.rotation.y,
-            transform_offset.transform.rotation.z,
-            transform_offset.transform.rotation.w
-        ]).as_matrix()
-        
-        transform_offset_matrix[0:3, 3] = np.array([
-            transform_offset.transform.translation.x,
-            transform_offset.transform.translation.y,
-            transform_offset.transform.translation.z
-        ])
-        
-        # Compute inverse of the offset matrix
-        transform_offset_matrix_inv = np.linalg.inv(transform_offset_matrix)
-        
-        # convert the UWB pose to a homogeneous transformation matrix
-        uwb_quat = [
-            uwb_cartesian_pose.rotation.x,
-            uwb_cartesian_pose.rotation.y,
-            uwb_cartesian_pose.rotation.z,
-            uwb_cartesian_pose.rotation.w
-        ]
-        
-        uwb_translation = [
-            uwb_cartesian_pose.translation.x,
-            uwb_cartesian_pose.translation.y,
-            uwb_cartesian_pose.translation.z
-        ]
-        
-        uwb_matrix = np.eye(4)
-        uwb_matrix[0:3, 0:3] = R.from_quat(uwb_quat).as_matrix()
-        uwb_matrix[0:3, 3] = uwb_translation
-        
-        # Apply the inverse offset to the UWB pose
-        robot_matrix = np.dot(transform_offset_matrix_inv, uwb_matrix)
-        robot_translation = robot_matrix[0:3, 3]
-        robot_quat = R.from_matrix(robot_matrix[0:3, 0:3]).as_quat()
-        
-        # Set the robot's origin in the Cartesian frame
-        robot_cartesian_pose.translation.x = robot_translation[0]
-        robot_cartesian_pose.translation.y = robot_translation[1]
-        robot_cartesian_pose.translation.z = robot_translation[2]
-        robot_cartesian_pose.rotation.x = robot_quat[0]
-        robot_cartesian_pose.rotation.y = robot_quat[1]
-        robot_cartesian_pose.rotation.z = robot_quat[2]
-        robot_cartesian_pose.rotation.w = robot_quat[3]
-        
+        Args:
+            uwb_cartesian_pose (Transform): Position of the UWB tag in its original frame.
+            transform_time (rclpy.time.Time): The timestamp for the transform.
+
+        Returns:
+            Transform: The UWB position transformed to the robot's origin (base_link) frame.
+        """
+        # Convert uwb_cartesian_pose to PointStamped or TransformStamped
+        uwb_point = tf2_geometry_msgs.PointStamped()
+        uwb_point.header.stamp = transform_time.to_msg()
+        uwb_point.header.frame_id = self.uwb_frame_id_
+        uwb_point.point.x = uwb_cartesian_pose.translation.x
+        uwb_point.point.y = uwb_cartesian_pose.translation.y
+        uwb_point.point.z = uwb_cartesian_pose.translation.z
+
+        # Lookup the transform from UWB frame to base_link frame
+        try:
+            transform = self.tf_buffer.lookup_transform(
+                self.base_link_frame_id_, self.uwb_frame_id_, transform_time, self.transform_timeout_)
+
+            # Transform the UWB position to the robot's origin frame (base_link)
+            robot_origin_point = tf2_geometry_msgs.do_transform_point(uwb_point, transform)
+
+            # Create a Transform object with the transformed coordinates
+            robot_cartesian_pose = Transform()
+            robot_cartesian_pose.translation.x = robot_origin_point.point.x
+            robot_cartesian_pose.translation.y = robot_origin_point.point.y
+            robot_cartesian_pose.translation.z = robot_origin_point.point.z
+
+            # Use the orientation from the transform (or keep the IMU-based orientation)
+            robot_cartesian_pose.rotation = self.transform_orientation_
+
+        except TransformException as e:
+            self.get_logger().error(f"Unable to transform UWB position: {e}")
+            return uwb_cartesian_pose  # Fallback to original UWB pose if transform fails
+
         return robot_cartesian_pose
-    
+
     
     def cartesian_to_map(self, cartesian_pose):
 
@@ -423,7 +465,11 @@ class NavUwbTransformNode(Node):
         
         if (self.transform_good_ and self.uwb_updated_ and self.odom_updated_):
             
+            # First, convert the uwb pose from the uwb frame to the odom frame (world frame) using transform_world_pose_
             uwb_odom = self.cartesian_to_map(self.latest_cartesian_pose_)
+            
+            # self.get_logger().info("----------------------------------------------------")
+            # self.get_logger().info(f"UWB Cartesian Pose before offset: {uwb_odom}")
             
             transformed_cartesian_uwb = Transform()
             transformed_cartesian_uwb.translation.x = uwb_odom.pose.pose.position.x
@@ -431,18 +477,26 @@ class NavUwbTransformNode(Node):
             transformed_cartesian_uwb.translation.z = uwb_odom.pose.pose.position.z
             transformed_cartesian_uwb.rotation = uwb_odom.pose.pose.orientation
             
+            # Now we have the uwb location in the odom frame of the world
+            # we need to offset it to the robot's origin
             # Want the pose of the vehicle origin, not the UWB
             transformed_cartesian_robot = self.get_robot_origin_cartesian_pose(
                 transformed_cartesian_uwb, rclpy.time.Time(seconds=uwb_odom.header.stamp.sec, nanoseconds=uwb_odom.header.stamp.nanosec))
             
             # covariances ???
             
-            
             # Update the pose in the odometry message
             uwb_odom.pose.pose.position.x = transformed_cartesian_robot.translation.x
             uwb_odom.pose.pose.position.y = transformed_cartesian_robot.translation.y
             uwb_odom.pose.pose.position.z = transformed_cartesian_robot.translation.z
             uwb_odom.pose.pose.orientation = transformed_cartesian_robot.rotation
+            
+            # Now that we have the uwb localtion in odom frame of the robot origin by offsetting using the transform 
+            # between the base_link and the uwb frame
+            
+            # self.get_logger().info(f"UWB Cartesian Pose after offset: {uwb_odom}")
+            
+            # Adjust Altitude if zero_altitude_ is set
             if self.zero_altitude_:
                 uwb_odom.pose.pose.position.z = 0.0
                 
@@ -464,9 +518,6 @@ class NavUwbTransformNode(Node):
             if uwb_odom:
                 self.uwb_odom_pub.publish(uwb_odom)
                 
-            
-            
-            
 
     def compute_transform(self):
         
@@ -484,6 +535,9 @@ class NavUwbTransformNode(Node):
             
             self.get_logger().info(f"UWB Cartesian Pose: {transform_cartesian_pose_corrected}")
             
+            # Now, we now have this UWB pose in robot's origin frame and we have the input odometry pose of the robot in the world frame (odom)
+            # We need to compute the transform between UWB pose and the odometry pose in the world frame ???
+            # Then, we process the orientaion of this pose using imu orientation or yaw from input odometry
             imu_roll, imu_pitch, imu_yaw = R.from_quat([
                 self.transform_orientation_.x,
                 self.transform_orientation_.y,
@@ -519,7 +573,7 @@ class NavUwbTransformNode(Node):
             transform_world_pose_yaw_only.rotation.y = odom_quat[1]
             transform_world_pose_yaw_only.rotation.z = odom_quat[2]
             
-            # Compute the transform
+            # Compute the transform between the input odometry pose and the UWB pose
             world_pose_mat = transform_to_matrix(transform_world_pose_yaw_only)
             cartesian_pose_mat = transform_to_matrix(cartesian_pose_with_orientation)
             cartesian_pose_inv = np.linalg.inv(cartesian_pose_mat)
@@ -532,6 +586,9 @@ class NavUwbTransformNode(Node):
             self.cartesian_world_trans_inverse_ = matrix_to_transform(self.cartesian_world_trans_inverse_mat)
             
             self.transform_good_ = True
+            
+            # print the transform
+            self.get_logger().info(f"Cartesian World Transform: {self.cartesian_world_transform_}")
             
             # Broadcast the trasnform if needed
             if self.broadcast_cartesian_transform_:
@@ -558,11 +615,6 @@ class NavUwbTransformNode(Node):
                 self.get_logger().info("Broadcasted Transform")
     
     
-    
-    
-    
-    
-    
     def set_trans_for_odometry(self, msg):
         self.transform_world_pose_.translation.x = msg.pose.pose.position.x
         self.transform_world_pose_.translation.y = msg.pose.pose.position.y
@@ -571,9 +623,10 @@ class NavUwbTransformNode(Node):
         self.has_transform_odom_ = True
         
         if (not self.transform_good_ and self.use_odometry_yaw_):
+            self.get_logger().info(f"Using odometry yaw with pose: {self.transform_world_pose_}")
             imu = Imu()
             imu.orientation = msg.pose.pose.orientation
-            imu.header.frame_id = msg.header.child_frame_id
+            imu.header.frame_id = msg.child_frame_id
             imu.header.stamp = msg.header.stamp
             self.imu_callback(imu)
             

@@ -37,15 +37,15 @@ def generate_launch_description():
         description='Whether to use the lidar or not'
     )
     
-    declare_use_rl = DeclareLaunchArgument(
-        'use_rl',
+    declare_use_rl_ekf = DeclareLaunchArgument(
+        'use_rl_ekf',
         default_value='false',
         description='Whether to use the robot_localization or not'
     )
 
     use_lidar = LaunchConfiguration('use_lidar')
     use_imu = LaunchConfiguration('use_imu')
-    use_rl = LaunchConfiguration('use_rl')
+    use_rl_ekf = LaunchConfiguration('use_rl_ekf')
 
     zbot_stella_n2_bringup_group_action = GroupAction([
 
@@ -137,14 +137,14 @@ def generate_launch_description():
         name='ekf_filter_node',
         output='screen',
         parameters=[rl_ekf_params_file],
-        condition=IfCondition(use_rl)
+        condition=IfCondition(use_rl_ekf)
     )
     
 
     return LaunchDescription([
         declare_use_imu,
         declare_use_lidar,
-        declare_use_rl,
+        declare_use_rl_ekf,
         zbot_stella_n2_bringup_group_action,
         zbot_stella_n2_sensors_group_action,
         robot_localization_node
