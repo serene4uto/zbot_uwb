@@ -60,7 +60,7 @@ def matrix_to_transform(matrix):
 
 class NavUwbTransformNode(Node):
     
-    uwb_tag_point_topic = "/uwb_tag_point/kf"
+    uwb_tag_point_topic = "/uwb_tag_point/kf_spikes_filtered"
     imu_topic = "/imu/data"
     odom_topic = "/odometry/filtered"
     
