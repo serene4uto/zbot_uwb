@@ -90,7 +90,7 @@ class NavUwbTransformNode(Node):
         self.odom_updated_ = False
         self.odom_update_time = None
         
-        
+        self.first_uwb_ = False
         
         #lastest imu orientation
         self.transform_orientation_ = Quaternion() 
@@ -115,6 +115,8 @@ class NavUwbTransformNode(Node):
         self.uwb_frame_id_ = None
         self.base_link_frame_id_ = None
         self.world_frame_id_ = None
+        
+        self.transform_good_reset_cnt_ = 0
         
         self.transform_timeout_ = Duration(nanoseconds=0)
         
@@ -242,10 +244,11 @@ class NavUwbTransformNode(Node):
         # self.get_logger().info(f"Received UWB Tag Point: {msg.point.x}, {msg.point.y}, {msg.point.z}")
         self.uwb_frame_id_ = msg.header.frame_id
         
-        if(not self.transform_good_):
+        # TODO:....
+        if(not self.transform_good_ and not self.first_uwb_): # TODO: optimize condition
             # if we haven't computed the transform yet, then store this msg as initial UWB data to use
-            if( not self.has_transform_uwb_):
-                self.set_trans_from_UWB(msg)
+            self.set_trans_from_UWB(msg)
+            self.first_uwb_ = True
         
         self.latest_cartesian_pose_.translation.x = msg.point.x
         self.latest_cartesian_pose_.translation.y = msg.point.y
@@ -507,6 +510,14 @@ class NavUwbTransformNode(Node):
         
         
     def uwb_transform_callback(self):
+
+        if self.transform_good_: 
+            if self.transform_good_reset_cnt_ < 3:
+                self.transform_good_reset_cnt_ += 1
+            else:
+                self.transform_good_reset_cnt_ = 0
+                self.transform_good_ = False
+            
         if not self.transform_good_:
             self.compute_transform()
             
@@ -589,7 +600,8 @@ class NavUwbTransformNode(Node):
             
             # print the transform
             self.get_logger().info(f"Cartesian World Transform: {self.cartesian_world_transform_}")
-            
+        
+        
             # Broadcast the trasnform if needed
             if self.broadcast_cartesian_transform_:
                 cartesian_transform_stamped = TransformStamped()

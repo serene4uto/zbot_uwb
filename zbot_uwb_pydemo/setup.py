@@ -22,7 +22,8 @@ setup(
         'console_scripts': [
             # 'uwb_follower = zbot_uwb_pydemo.uwb_follower:main',
             # 'nav_to_pose = zbot_uwb_pydemo.nav_to_pose:main',
-            'odom2uwbref_tf_check = zbot_uwb_pydemo.odom2uwbref_tf_check:main',
+            # 'odom2uwbref_tf_check = zbot_uwb_pydemo.odom2uwbref_tf_check:main',
+            'uwb_waypoints_follower = zbot_uwb_pydemo.uwb_waypoints_follower:main',
         ],
     },
 )

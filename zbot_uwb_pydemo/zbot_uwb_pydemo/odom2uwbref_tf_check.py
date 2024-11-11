@@ -14,7 +14,7 @@ class OdomToUWBReferenceNode(Node):
         try:
             # Look up the transform from odom to uwb_reference
             transform: TransformStamped = self.tf_buffer.lookup_transform(
-                'odom', 'uwb_reference', rclpy.time.Time()
+                'map', 'uwb_reference', rclpy.time.Time()
             )
             # Extract translation and rotation
             translation = transform.transform.translation
@@ -22,7 +22,7 @@ class OdomToUWBReferenceNode(Node):
             self.get_logger().info(f"Translation: [{translation.x}, {translation.y}, {translation.z}]")
             self.get_logger().info(f"Rotation (Quaternion): [{rotation.x}, {rotation.y}, {rotation.z}, {rotation.w}]")
         except Exception as e:
-            self.get_logger().warn(f"Could not transform 'odom' to 'uwb_reference': {e}")
+            self.get_logger().warn(f"Could not transform 'map' to 'uwb_reference': {e}")
 
 def main(args=None):
     rclpy.init(args=args)
