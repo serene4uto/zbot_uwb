@@ -13,6 +13,8 @@ import tf2_geometry_msgs
 
 from nav2_simple_commander.robot_navigator import BasicNavigator
 
+from scipy.spatial.transform import Rotation as R
+
 
 class UwbWaypointsFollowerNode(Node, tk.Tk):
     
@@ -91,10 +93,19 @@ class UwbWaypointsFollowerNode(Node, tk.Tk):
             posest_temp.pose.position.z = 0.0
             
             #TODO: orientation
-            posest_temp.pose.orientation.x = 0.0
-            posest_temp.pose.orientation.y = 0.0
-            posest_temp.pose.orientation.z = 0.0
-            posest_temp.pose.orientation.w = 1.0
+            # posest_temp.pose.orientation.x = 0.0
+            # posest_temp.pose.orientation.y = 0.0
+            # posest_temp.pose.orientation.z = 0.0
+            # posest_temp.pose.orientation.w = 1.0
+            
+            
+            target_rot = R.from_euler('z', float(wp[2]), degrees=False)
+            target_quat = target_rot.as_quat()
+            
+            posest_temp.pose.orientation.x = target_quat[0]
+            posest_temp.pose.orientation.y = target_quat[1]
+            posest_temp.pose.orientation.z = target_quat[2]
+            posest_temp.pose.orientation.w = target_quat[3]
             
             posest_temp.header.stamp = self.get_clock().now().to_msg()
             posest_temp.header.frame_id = ""

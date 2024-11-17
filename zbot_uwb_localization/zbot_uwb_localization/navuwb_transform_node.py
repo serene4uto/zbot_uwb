@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
 
-from geometry_msgs.msg import PointStamped, Transform, Quaternion, TransformStamped
+from geometry_msgs.msg import PointStamped, Transform, Quaternion, TransformStamped, QuaternionStamped
 import rclpy.time
 from sensor_msgs.msg import Imu
 from nav_msgs.msg import Odometry
@@ -183,6 +183,9 @@ class NavUwbTransformNode(Node):
         
         
     def imu_callback(self, msg):
+        
+        # self.get_logger().info(f"Received IMU: {msg}")
+        
         # We need the base link frame id from the odometry message to get the transform
         # so we need to wait until we get that message before we can compute the transform
         if(self.has_transform_odom_):
@@ -235,6 +238,13 @@ class NavUwbTransformNode(Node):
                 self.transform_orientation_.y = new_rotation.as_quat()[1]
                 self.transform_orientation_.z = new_rotation.as_quat()[2]
                 self.transform_orientation_.w = new_rotation.as_quat()[3]
+                
+                
+                #quich fix, TODO: need correction
+                self.transform_orientation_.x = 0.0
+                self.transform_orientation_.y = 0.0
+                self.transform_orientation_.z = 0.0
+                self.transform_orientation_.w = 1.0
 
                 self.has_transform_imu_ = True
                 # self.get_logger().info(f'Updated orientation: {self.transform_orientation_}')

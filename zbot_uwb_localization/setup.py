@@ -24,7 +24,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'navuwb_transform_node = zbot_uwb_localization.navuwb_transform_node:main',
+            # 'navuwb_transform_node = zbot_uwb_localization.navuwb_transform_node:main',
+            'navuwb_transform_node = zbot_uwb_localization.navuwb_transform_node_opt:main',
         ],
     },
 )

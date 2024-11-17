@@ -31,7 +31,7 @@ ekf_filter_node_odom:
                   false, false, true,
                   false, false, false]
     imu0_differential: true  # If using a real robot you might want to set this to true, since usually absolute measurements from real imu's are not very accurate
-    imu0_relative: false
+    imu0_relative: true
     imu0_queue_size: 10
 
     # imu0_pose_rejection_threshold: 0.8                 # Note the difference in parameter names
@@ -96,7 +96,7 @@ ekf_filter_node_map:
                   false, false, true,
                   false, false, false]
     imu0_differential: true  # If using a real robot you might want to set this to true, since usually absolute measurements from real imu's are not very accurate
-    imu0_relative: false
+    imu0_relative: true
     imu0_queue_size: 10
     imu0_remove_gravitational_acceleration: true
 
